@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "question": "What are the two phases of a RAG pipeline?",
+    "gold_answer": "The two phases are Indexing (offline) and Querying (online). Indexing involves loading, splitting, embedding, and storing documents. Querying involves embedding the user question, retrieving top-k chunks, and generating an answer.",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["indexing", "querying", "offline", "online"]
+  },
+  {
+    "id": 2,
+    "question": "What is chunking and why does it matter for retrieval quality?",
+    "gold_answer": "Chunking is how you split documents into smaller pieces for embedding. Chunking strategy significantly affects retrieval quality: too small and important context is split across chunks; too large and chunks contain noise that dilutes the signal.",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["chunking", "retrieval quality", "chunk size"]
+  },
+  {
+    "id": 3,
+    "question": "What does recall@k measure in RAG evaluation?",
+    "gold_answer": "Recall@k measures the fraction of relevant chunks found in the top-k retrieval results.",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["recall", "top-k", "relevant chunks"]
+  },
+  {
+    "id": 4,
+    "question": "What is HyDE and how does it improve retrieval?",
+    "gold_answer": "HyDE stands for Hypothetical Document Embeddings. It works by asking the LLM to generate a hypothetical answer, embedding that answer, and using that embedding for retrieval instead of embedding the question directly. This often improves retrieval because the hypothetical answer is phrased more like a document than a question.",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["HyDE", "hypothetical document embeddings", "hypothetical answer"]
+  },
+  {
+    "id": 5,
+    "question": "What are the common failure modes in RAG systems?",
+    "gold_answer": "Common failure modes include: chunking too small (important context split across chunks), chunking too large (chunks contain noise), query-document mismatch (query phrased differently from document text), stale index (documents updated but embeddings not refreshed), and context window overflow (too many chunks injected, model truncates them).",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["failure modes", "chunking", "stale index", "context window"]
+  },
+  {
+    "id": 6,
+    "question": "What is RAGAS and what metrics does it compute?",
+    "gold_answer": "RAGAS is an evaluation framework for RAG systems. It computes faithfulness (whether the answer is supported by the retrieved context), answer relevancy (whether the answer addresses the question), and context precision (what fraction of retrieved chunks are actually relevant).",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["RAGAS", "faithfulness", "answer relevancy", "context precision"]
+  },
+  {
+    "id": 7,
+    "question": "What is the difference between dense and hybrid retrieval?",
+    "gold_answer": "Dense retrieval uses pure vector similarity (cosine or dot-product) to find the most semantically similar chunks. Hybrid retrieval combines dense vector similarity with sparse keyword matching (BM25), using a weighted combination of both scores.",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["dense retrieval", "hybrid", "BM25", "sparse"]
+  },
+  {
+    "id": 8,
+    "question": "What is MRR in retrieval evaluation?",
+    "gold_answer": "MRR stands for Mean Reciprocal Rank. It measures how highly the first relevant result is ranked in the retrieved results.",
+    "gold_source": "rag-overview.md",
+    "key_concepts": ["MRR", "mean reciprocal rank", "ranking"]
+  },
+  {
+    "id": 9,
+    "question": "What is HNSW and what are its pros and cons?",
+    "gold_answer": "HNSW (Hierarchical Navigable Small World) is a graph-based ANN algorithm that builds a multi-layer graph where each layer is a subset of the lower layer. Pros: very fast queries and high recall. Cons: high memory usage. It is used by Pinecone, Weaviate, Qdrant, and FAISS.",
+    "gold_source": "vector-databases.md",
+    "key_concepts": ["HNSW", "graph-based", "memory", "fast queries"]
+  },
+  {
+    "id": 10,
+    "question": "Which similarity metric should be used with OpenAI's text-embedding-3-small?",
+    "gold_answer": "Cosine similarity should be used with text-embedding-3-small because it measures the angle between vectors, making magnitude irrelevant, which is appropriate for text embeddings.",
+    "gold_source": "vector-databases.md",
+    "key_concepts": ["cosine", "text-embedding-3-small", "similarity metric"]
+  },
+  {
+    "id": 11,
+    "question": "What is the dimension of text-embedding-3-small embeddings?",
+    "gold_answer": "text-embedding-3-small produces embeddings with 1536 dimensions.",
+    "gold_source": "vector-databases.md",
+    "key_concepts": ["1536", "dimensions", "text-embedding-3-small"]
+  },
+  {
+    "id": 12,
+    "question": "What is a Pinecone namespace and when would you use one?",
+    "gold_answer": "A Pinecone namespace is a named logical partition within an index. Queries are scoped to a namespace. They are useful for multi-tenant setups (one namespace per user) or separating chunking strategies in experiments.",
+    "gold_source": "vector-databases.md",
+    "key_concepts": ["namespace", "partition", "multi-tenant", "experiments"]
+  },
+  {
+    "id": 13,
+    "question": "When should you choose Pinecone over Weaviate?",
+    "gold_answer": "Choose Pinecone when you need a production deployment with zero ops overhead, need reliability SLAs, and want fully managed serverless infrastructure. Choose Weaviate when hybrid search is important or you want open-source control.",
+    "gold_source": "vector-databases.md",
+    "key_concepts": ["Pinecone", "Weaviate", "managed", "serverless", "hybrid search"]
+  },
+  {
+    "id": 14,
+    "question": "What is metadata filtering in a vector database?",
+    "gold_answer": "Metadata filtering allows you to filter vectors by arbitrary metadata fields before or during ANN search. For example, filtering by source filename to only retrieve from a specific document.",
+    "gold_source": "vector-databases.md",
+    "key_concepts": ["metadata filtering", "filter", "ANN", "arbitrary"]
+  },
+  {
+    "id": 15,
+    "question": "What is LangChain Expression Language (LCEL)?",
+    "gold_answer": "LangChain Expression Language (LCEL) composes runnables using the pipe operator or RunnableSequence.from([...]). It allows chaining LLM calls, prompts, retrievers, and parsers in a declarative way that supports streaming.",
+    "gold_source": "langchain-concepts.md",
+    "key_concepts": ["LCEL", "pipe", "RunnableSequence", "streaming"]
+  },
+  {
+    "id": 16,
+    "question": "How does the ReAct agent pattern work?",
+    "gold_answer": "ReAct (Reasoning + Acting) works in a loop: (1) Thought - the model reasons about what to do, (2) Action - the model calls a tool, (3) Observation - the tool returns a result. This repeats until the model produces a final answer.",
+    "gold_source": "langchain-concepts.md",
+    "key_concepts": ["ReAct", "thought", "action", "observation", "loop"]
+  },
+  {
+    "id": 17,
+    "question": "What is LangSmith used for?",
+    "gold_answer": "LangSmith is LangChain's observability platform. Setting LANGCHAIN_TRACING_V2=true and LANGCHAIN_API_KEY automatically traces every chain and agent run, capturing inputs, outputs, latency, and token usage.",
+    "gold_source": "langchain-concepts.md",
+    "key_concepts": ["LangSmith", "observability", "tracing", "latency", "token usage"]
+  },
+  {
+    "id": 18,
+    "question": "What is multi-query retrieval in LangChain?",
+    "gold_answer": "Multi-query retrieval generates 3-5 rephrased versions of the original question, retrieves documents for each version, deduplicates the results, and merges them. This increases retrieval coverage.",
+    "gold_source": "langchain-concepts.md",
+    "key_concepts": ["multi-query", "rephrased", "deduplicate", "coverage"]
+  },
+  {
+    "id": 19,
+    "question": "What is parent document retrieval?",
+    "gold_answer": "Parent document retrieval indexes small chunks but when a chunk is retrieved, the full parent document (or larger context window around it) is returned to the LLM. This gives better context while maintaining precise retrieval.",
+    "gold_source": "langchain-concepts.md",
+    "key_concepts": ["parent document", "small chunks", "larger context"]
+  },
+  {
+    "id": 20,
+    "question": "What LangChain package contains the Pinecone vector store integration?",
+    "gold_answer": "The Pinecone vector store integration is in the @langchain/pinecone package (JavaScript) or langchain-pinecone package (Python).",
+    "gold_source": "langchain-concepts.md",
+    "key_concepts": ["@langchain/pinecone", "langchain-pinecone", "package"]
+  }
+]

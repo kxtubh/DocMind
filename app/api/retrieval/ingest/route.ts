@@ -13,6 +13,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No text provided" }, { status: 400 });
   }
 
+  // Proxy to FastAPI when configured (Phase 2)
+  if (process.env.FASTAPI_URL) {
+    const res = await fetch(`${process.env.FASTAPI_URL}/ingest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, source, strategy: "recursive", chunk_size: 1000, chunk_overlap: 200 }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json({ error: data.detail ?? "Ingest failed" }, { status: 500 });
+    }
+    return NextResponse.json(data, { status: 200 });
+  }
+
+  // Fallback: direct Pinecone ingestion (Vercel / no FastAPI)
   try {
     const splitter = RecursiveCharacterTextSplitter.fromLanguage("markdown", {
       chunkSize: 1000,
