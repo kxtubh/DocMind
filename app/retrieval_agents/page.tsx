@@ -1,85 +1,31 @@
 import { ChatWindow } from "@/components/ChatWindow";
-import { GuideInfoBox } from "@/components/guide/GuideInfoBox";
 
-export default function AgentsPage() {
-  const InfoCard = (
-    <GuideInfoBox>
-      <ul>
-        <li className="hidden text-l md:block">
-          🤝
-          <span className="ml-2">
-            This template showcases a{" "}
-            <a href="https://js.langchain.com/" target="_blank">
-              LangChain.js
-            </a>{" "}
-            retrieval chain and the Vercel{" "}
-            <a href="https://sdk.vercel.ai/docs" target="_blank">
-              AI SDK
-            </a>{" "}
-            in a{" "}
-            <a href="https://nextjs.org/" target="_blank">
-              Next.js
-            </a>{" "}
-            project.
-          </span>
-        </li>
-        <li className="hidden text-l md:block">
-          🛠️
-          <span className="ml-2">
-            The agent has access to a vector store retriever as a tool as well
-            as a memory. It&apos;s particularly well suited to meta-questions
-            about the current conversation.
-          </span>
-        </li>
-        <li className="hidden text-l md:block">
-          💻
-          <span className="ml-2">
-            You can find the prompt and model logic for this use-case in{" "}
-            <code>app/api/chat/retrieval_agents/route.ts</code>.
-          </span>
-        </li>
-        <li>
-          🤖
-          <span className="ml-2">
-            By default, the agent is pretending to be a robot, but you can
-            change the prompt to whatever you want!
-          </span>
-        </li>
-        <li className="hidden text-l md:block">
-          🎨
-          <span className="ml-2">
-            The main frontend logic is found in{" "}
-            <code>app/retrieval_agents/page.tsx</code>.
-          </span>
-        </li>
-        <li className="hidden text-l md:block">
-          🔱
-          <span className="ml-2">
-            Before running this example, you&apos;ll first need to set up a
-            Supabase (or other) vector store. See the README for more details.
-          </span>
-        </li>
-        <li className="text-l">
-          👇
-          <span className="ml-2">
-            Upload some text, then try asking e.g.{" "}
-            <code>What are some ways of doing retrieval in LangChain?</code>{" "}
-            below!
-          </span>
-        </li>
-      </ul>
-    </GuideInfoBox>
-  );
-
+export default function RetrievalAgentsPage() {
   return (
     <ChatWindow
       endpoint="api/chat/retrieval_agents"
-      emptyStateComponent={InfoCard}
+      emptyStateComponent={
+        <div className="p-6 max-w-xl mx-auto text-sm text-muted-foreground space-y-3">
+          <h2 className="text-base font-semibold text-foreground">
+            Agentic Retrieval — ReAct + Pinecone
+          </h2>
+          <p>
+            A LangGraph ReAct agent that decides when to search your documents.
+            Enable <strong>Show intermediate steps</strong> to see tool calls.
+          </p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Agent autonomously calls the retrieval tool as needed</li>
+            <li>Handles multi-hop and follow-up questions better</li>
+            <li>Toggle intermediate steps to inspect reasoning</li>
+          </ul>
+          <p className="text-xs">
+            Stack: Next.js · LangGraph.js · OpenAI gpt-4o-mini · Pinecone
+          </p>
+        </div>
+      }
       showIngestForm={true}
       showIntermediateStepsToggle={true}
-      placeholder={
-        'Beep boop! I\'m a robot retrieval-focused agent! Ask, "What are some ways of doing retrieval in LangChain.js?"'
-      }
+      placeholder="Ask a multi-step question about your documents…"
       emoji="🤖"
     />
   );

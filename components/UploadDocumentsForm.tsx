@@ -1,63 +1,95 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import DEFAULT_RETRIEVAL_TEXT from "@/data/DefaultRetrievalText";
+import { useState, useRef, type FormEvent, type ChangeEvent } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import { toast } from "sonner";
 
 export function UploadDocumentsForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [document, setDocument] = useState(DEFAULT_RETRIEVAL_TEXT);
+  const [text, setText] = useState("");
+  const [source, setSource] = useState("upload");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSource(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => setText(ev.target?.result as string);
+    reader.readAsText(file);
+  };
+
   const ingest = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    const response = await fetch("/api/retrieval/ingest", {
-      method: "POST",
-      body: JSON.stringify({
-        text: document,
-      }),
-    });
-    if (response.status === 200) {
-      setDocument("Uploaded!");
-    } else {
-      const json = await response.json();
-      if (json.error) {
-        setDocument(json.error);
-      }
+    if (!text.trim()) {
+      toast.error("Paste text or upload a file first.");
+      return;
     }
-    setIsLoading(false);
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/retrieval/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, source }),
+      });
+      const json = await response.json();
+      if (response.ok) {
+        toast.success(`Ingested ${json.chunks} chunks from "${source}"`);
+        setText("");
+        setSource("upload");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      } else {
+        toast.error(json.error ?? "Upload failed");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   return (
     <form onSubmit={ingest} className="flex flex-col gap-4 w-full">
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium">Upload file (.txt, .md)</label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,.md"
+          onChange={onFileChange}
+          className="text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary/80 cursor-pointer"
+        />
+      </div>
       <Textarea
-        className="grow p-4 rounded bg-transparent min-h-[512px]"
-        value={document}
-        onChange={(e) => setDocument(e.target.value)}
+        className="grow p-4 rounded bg-transparent min-h-[300px] text-xs font-mono"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Or paste markdown / text here…"
       />
-      <Button type="submit">
-        <div
-          role="status"
-          className={`${isLoading ? "" : "hidden"} flex justify-center`}
-        >
-          <svg
-            aria-hidden="true"
-            className="w-6 h-6 text-white animate-spin dark:text-white fill-sky-800"
-            viewBox="0 0 100 101"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-              fill="currentColor"
-            />
-            <path
-              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-              fill="currentFill"
-            />
-          </svg>
-          <span className="sr-only">Loading...</span>
-        </div>
-        <span className={isLoading ? "hidden" : ""}>Upload</span>
+      <Button type="submit" disabled={isLoading || !text.trim()}>
+        {isLoading ? (
+          <span className="flex items-center gap-2">
+            <svg
+              aria-hidden="true"
+              className="w-4 h-4 animate-spin"
+              viewBox="0 0 100 101"
+              fill="none"
+            >
+              <path
+                d="M100 50.591C100 78.205 77.614 100.591 50 100.591C22.386 100.591 0 78.205 0 50.591C0 22.977 22.386 0.591 50 0.591C77.614 0.591 100 22.977 100 50.591ZM9.081 50.591C9.081 73.19 27.401 91.509 50 91.509C72.599 91.509 90.919 73.19 90.919 50.591C90.919 27.992 72.599 9.672 50 9.672C27.401 9.672 9.081 27.992 9.081 50.591Z"
+                fill="currentColor"
+              />
+              <path
+                d="M93.968 39.041C96.393 38.404 97.862 35.912 97.008 33.554C95.293 28.823 92.871 24.369 89.817 20.348C85.845 15.119 80.883 10.724 75.212 7.413C69.542 4.102 63.275 1.940 56.770 1.051C51.767 0.368 46.698 0.447 41.735 1.279C39.261 1.693 37.813 4.198 38.450 6.623C39.087 9.049 41.569 10.472 44.051 10.107C47.851 9.549 51.719 9.527 55.540 10.049C60.864 10.777 65.993 12.546 70.633 15.255C75.274 17.965 79.335 21.562 82.585 25.841C84.918 28.912 86.800 32.291 88.181 35.876C89.083 38.216 91.542 39.678 93.968 39.041Z"
+                fill="currentFill"
+              />
+            </svg>
+            Ingesting…
+          </span>
+        ) : (
+          "Ingest document"
+        )}
       </Button>
     </form>
   );

@@ -38,23 +38,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>LangChain + Next.js Template</title>
+        <title>RAG Document Q&A — Pinecone + LangChain + Next.js</title>
         <link rel="shortcut icon" href="/images/favicon.ico" />
         <meta
           name="description"
-          content="Starter template showing how to use LangChain in Next.js projects. See source code and deploy your own at https://github.com/langchain-ai/langchain-nextjs-template!"
+          content="Production RAG app: upload documents, ask questions, get grounded answers with citations. Powered by Pinecone, LangChain, and OpenAI."
         />
-        <meta property="og:title" content="LangChain + Next.js Template" />
+        <meta property="og:title" content="RAG Document Q&A" />
         <meta
           property="og:description"
-          content="Starter template showing how to use LangChain in Next.js projects. See source code and deploy your own at https://github.com/langchain-ai/langchain-nextjs-template!"
+          content="Production RAG app: upload documents, ask questions, get grounded answers with citations."
         />
         <meta property="og:image" content="/images/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="LangChain + Next.js Template" />
+        <meta name="twitter:title" content="RAG Document Q&A" />
         <meta
           name="twitter:description"
-          content="Starter template showing how to use LangChain in Next.js projects. See source code and deploy your own at https://github.com/langchain-ai/langchain-nextjs-template!"
+          content="Production RAG app: upload documents, ask questions, get grounded answers with citations."
         />
         <meta name="twitter:image" content="/images/og-image.png" />
       </head>
@@ -72,26 +72,17 @@ export default function RootLayout({
                   <Logo />
                 </a>
                 <nav className="flex gap-1 flex-col md:flex-row">
-                  <ActiveLink href="/">🏴‍☠️ Chat</ActiveLink>
-                  <ActiveLink href="/structured_output">
-                    🧱 Structured Output
-                  </ActiveLink>
-                  <ActiveLink href="/agents">🦜 Agents</ActiveLink>
-                  <ActiveLink href="/retrieval">🐶 Retrieval</ActiveLink>
+                  <ActiveLink href="/retrieval">🔍 Document Q&A</ActiveLink>
                   <ActiveLink href="/retrieval_agents">
-                    🤖 Retrieval Agents
+                    🤖 Agentic Retrieval
                   </ActiveLink>
-                  <ActiveLink href="/ai_sdk">
-                    🌊 React Server Components
-                  </ActiveLink>
-                  <ActiveLink href="/langgraph">🕸️ LangGraph</ActiveLink>
                 </nav>
               </div>
 
               <div className="flex justify-center">
                 <Button asChild variant="outline" size="default">
                   <a
-                    href="https://github.com/langchain-ai/langchain-nextjs-template"
+                    href="https://github.com/kaustubhk334/rag-project"
                     target="_blank"
                   >
                     <GithubIcon className="size-3" />
