@@ -41,3 +41,7 @@ next-env.d.ts
 !.yarn/sdks
 !.yarn/versions
 .env
+# Python
+__pycache__/
+*.pyc
+api/uvicorn.log

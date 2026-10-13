@@ -8,12 +8,34 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
+from langchain_core.embeddings import Embeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone
+from fastembed import TextEmbedding
 
 load_dotenv("../.env.local")
+
+# ── Local embeddings (free, no API key) ──────────────────────────────────────
+
+_embed_model = None
+
+def _get_embed_model():
+    global _embed_model
+    if _embed_model is None:
+        _embed_model = TextEmbedding("BAAI/bge-small-en-v1.5")
+    return _embed_model
+
+
+class LocalEmbeddings(Embeddings):
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        model = _get_embed_model()
+        return [v.tolist() for v in model.embed(texts)]
+
+    def embed_query(self, text: str) -> list[float]:
+        model = _get_embed_model()
+        return list(model.embed([text]))[0].tolist()
+
 
 app = FastAPI(title="RAG API", version="1.0.0")
 app.add_middleware(
@@ -23,15 +45,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory latency log. ponytail: global list, use Redis/DB if multi-process
+# ponytail: global list, use Redis/DB if multi-process
 _latency_log: list[dict] = []
 
 
 def _get_store(namespace: str = "") -> PineconeVectorStore:
     pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
     index = pc.Index(os.environ["PINECONE_INDEX"])
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    return PineconeVectorStore(index=index, embedding=embeddings, namespace=namespace)
+    return PineconeVectorStore(index=index, embedding=LocalEmbeddings(), namespace=namespace)
 
 
 # ── Request / Response models ─────────────────────────────────────────────────
@@ -53,6 +74,17 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
+    sources: list[dict]
+    latency: dict
+
+
+class RetrieveRequest(BaseModel):
+    question: str
+    namespace: str = ""
+    k: int = 4
+
+
+class RetrieveResponse(BaseModel):
     sources: list[dict]
     latency: dict
 
@@ -97,11 +129,41 @@ def ingest(req: IngestRequest):
     return {"ok": True, "chunks": len(chunks), "namespace": req.namespace or "default"}
 
 
+@app.post("/retrieve", response_model=RetrieveResponse)
+def retrieve(req: RetrieveRequest):
+    """Retrieve sources only — no LLM generation. Used by retrieval eval."""
+    t0 = time.perf_counter()
+
+    embeddings = LocalEmbeddings()
+    t_embed_start = time.perf_counter()
+    query_vec = embeddings.embed_query(req.question)
+    t_embed = time.perf_counter() - t_embed_start
+
+    t_retrieve_start = time.perf_counter()
+    store = _get_store(req.namespace)
+    docs = store.similarity_search_by_vector(query_vec, k=req.k)
+    t_retrieve = time.perf_counter() - t_retrieve_start
+
+    latency = {
+        "embed_ms": round(t_embed * 1000),
+        "retrieve_ms": round(t_retrieve * 1000),
+        "total_ms": round((time.perf_counter() - t0) * 1000),
+    }
+
+    return RetrieveResponse(
+        sources=[
+            {"pageContent": d.page_content[:300], "metadata": d.metadata}
+            for d in docs
+        ],
+        latency=latency,
+    )
+
+
 @app.post("/query", response_model=QueryResponse)
 def query(req: QueryRequest):
     t0 = time.perf_counter()
 
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = LocalEmbeddings()
     t_embed_start = time.perf_counter()
     query_vec = embeddings.embed_query(req.question)
     t_embed = time.perf_counter() - t_embed_start
@@ -114,12 +176,17 @@ def query(req: QueryRequest):
     context = "\n\n".join(d.page_content for d in docs)
 
     t_gen_start = time.perf_counter()
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
-    response = llm.invoke(
-        "Answer based only on the context below. "
-        "If the answer is not in the context, say you don't know.\n\n"
-        f"Context:\n{context}\n\nQuestion: {req.question}"
-    )
+    try:
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+        response = llm.invoke(
+            "Answer based only on the context below. "
+            "If the answer is not in the context, say you don't know.\n\n"
+            f"Context:\n{context}\n\nQuestion: {req.question}"
+        )
+        answer = str(response.content)
+    except Exception:
+        answer = "(LLM unavailable — retrieval-only mode)"
     t_gen = time.perf_counter() - t_gen_start
 
     total_ms = round((time.perf_counter() - t0) * 1000)
@@ -132,7 +199,7 @@ def query(req: QueryRequest):
     _latency_log.append(latency)
 
     return QueryResponse(
-        answer=str(response.content),
+        answer=answer,
         sources=[
             {"pageContent": d.page_content[:300], "metadata": d.metadata}
             for d in docs

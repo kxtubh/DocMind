@@ -63,7 +63,7 @@ def ingest_corpus(namespace: str = "", strategy: str = "recursive",
         r = requests.post(f"{API_URL}/ingest", json=payload)
         r.raise_for_status()
         data = r.json()
-        print(f"  ingested {md_file.name}: {data['chunks']} chunks → namespace '{namespace or 'default'}'")
+        print(f"  ingested {md_file.name}: {data['chunks']} chunks -> namespace '{namespace or 'default'}'")
 
 
 # ── Retrieval eval ────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ def run_retrieval_eval(namespace: str = "", k: int = 5, label: str = "default") 
     r_at_1, r_at_3, r_at_5, mrr_scores, hits = [], [], [], [], []
 
     for item in dataset:
-        r = requests.post(f"{API_URL}/query", json={"question": item["question"], "namespace": namespace, "k": k})
+        r = requests.post(f"{API_URL}/retrieve", json={"question": item["question"], "namespace": namespace, "k": k})
         r.raise_for_status()
         data = r.json()
         sources = [s["metadata"].get("source", "") for s in data["sources"]]
@@ -153,7 +153,7 @@ def run_ragas_eval(namespace: str = "") -> dict:
 
 def run_comparison():
     print("\n=== Chunking strategy comparison ===\n")
-    print("Ingesting corpus with 3 strategies…")
+    print("Ingesting corpus with 3 strategies...")
     for cfg in CHUNKING_STRATEGIES:
         print(f"\n  [{cfg['namespace']}]")
         ingest_corpus(
@@ -163,7 +163,7 @@ def run_comparison():
             chunk_overlap=cfg["chunk_overlap"],
         )
 
-    print("\nRunning retrieval eval per strategy…\n")
+    print("\nRunning retrieval eval per strategy...\n")
     results = []
     for cfg in CHUNKING_STRATEGIES:
         r = run_retrieval_eval(namespace=cfg["namespace"], k=5, label=cfg["namespace"])
@@ -208,17 +208,17 @@ def main():
         return
 
     if args.ingest:
-        print("Ingesting sample corpus…")
+        print("Ingesting sample corpus...")
         ingest_corpus(namespace=args.namespace)
         print("Done.\n")
 
     if args.retrieval:
-        print("Running retrieval eval…")
+        print("Running retrieval eval...")
         result = run_retrieval_eval(namespace=args.namespace, k=5)
         print(json.dumps(result, indent=2))
 
     if args.ragas:
-        print("\nRunning RAGAS eval…")
+        print("\nRunning RAGAS eval...")
         result = run_ragas_eval(namespace=args.namespace)
         print(json.dumps(result, indent=2))
 
